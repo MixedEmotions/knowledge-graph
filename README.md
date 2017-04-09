@@ -11,9 +11,10 @@ Knowledge Graph provides insight into relations between recognised entities usin
 ## REQUIREMENTS
 
 This package requires python3.5.
+
 Python libraries:
-elasticsearch
-Flask
+* elasticsearch
+* Flask
 
 DBpedia dumps from http://wiki.dbpedia.org/downloads-2016-04
 
