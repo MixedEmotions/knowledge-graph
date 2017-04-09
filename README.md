@@ -16,22 +16,33 @@ elasticsearch
 Flask
 
 DBpedia dumps from http://wiki.dbpedia.org/downloads-2016-04
+
 Minimal list of required files:
+
 infobox_properties_en.ttl
+
 instance_types_en.ttl
+
 persondata_en.ttl
 
 
 ## USAGE
 
-Type  http://0.0.0.0:5000/text=give your sentence here 
 
-in your browser, where text can be a sentence or a tweet. 
-The service should return 'suggestion' or 'non-suggestion'
+Type  http://0.0.0.0:5000/
+
+| Description        | API call           |
+| ------------- |:-------------:| -----:|
+| Check default configuration | GET	 /configuration |
+| Modify the configuration | POST	 /configuration |
+| Reset back to default configuration | GET	 /reset | 
+| Get status of the module | GET	/status | 
+| Create the Knowledge Graph | GET 	/start |
+
+
 
 ## CREDITS (citations if available)
 
-The neural network based classifier has been implemented using the deep learning library KERAS [site](https://keras.io).
 
 
 ## ACKNOWLEDGEMENT
