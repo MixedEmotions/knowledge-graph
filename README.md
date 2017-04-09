@@ -6,7 +6,7 @@ Creates Knowledge Graph from information processed by "Entity Extraction and Lin
 
 This MixedEmotions Knowledge Graph was developed by NUIG.
 
-Knowledge Graph provides insight into relations between recognised entities using semantic knowledge from DBpedia. KG module uses entities that are recognised by Entity Extraction and Linking module, and extracts relations between the entities from DBpedia. Once the relations are extracted and filtered, they are stored in Elasticsearch database, where using Kibi they are visualized.
+Knowledge Graph provides insight into relations between recognized entities using semantic knowledge from DBpedia. KG module uses entities that are recognised by Entity Extraction and Linking module, and extracts relations between the entities from DBpedia. Once the relations are extracted and filtered, they are stored in Elasticsearch database, where using Kibi they are visualized.
 
 ## REQUIREMENTS
 
@@ -24,10 +24,16 @@ Minimal list of required files:
 * persondata_en.ttl
 
 
+Elasticsearch
+
+Kibi
+
+
+
 ## USAGE
 
 
-Type  http://0.0.0.0:5000/
+Type  http://localhost:5000/
 
 | Description | API call |
 | ------------- |:-------------:|
