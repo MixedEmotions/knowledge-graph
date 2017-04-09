@@ -1,2 +1,3 @@
 #
-DBpedia_uncompressed/*
+DBpedia_uncompressed/*.ttl
+*.nt
