@@ -18,9 +18,9 @@ Flask
 DBpedia dumps from http://wiki.dbpedia.org/downloads-2016-04
 
 Minimal list of required files:
-infobox_properties_en.ttl
-instance_types_en.ttl
-persondata_en.ttl
+*infobox_properties_en.ttl
+*instance_types_en.ttl
+*persondata_en.ttl
 
 
 ## USAGE
