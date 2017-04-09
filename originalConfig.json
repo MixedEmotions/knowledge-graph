@@ -1,0 +1,89 @@
+{
+  "credentials": {
+    "elasticPort": 0,
+    "elasticHost": "elasticIP",
+    "elasticUsername": "elastic",
+    "elasticPassword": "changeme"
+  },
+  "variables": {
+    "inputIndexName": "trump_tweets",
+    "inputIndexType": "text_review",
+    "indexList": [
+      "location_unique",
+      "organization_unique",
+      "person_unique"
+    ],
+    "filters": {
+      "location": [
+        "birthPlace",
+        "location",
+        "foundation",
+        "type",
+        "founder",
+        "predecessor",
+        "party",
+        "country",
+        "based",
+        "channel",
+        "relations",
+        "branch",
+        "placeOfBirth",
+        "spouse",
+        "network",
+        "chancellor",
+        "parent",
+        "parents",
+        "primeminister",
+        "artist",
+        "athletics",
+        "title",
+        "successor",
+        "state"
+      ],
+      "organization": [
+        "type",
+        "successor",
+        "distributor",
+        "birthPlace",
+        "vicepresident",
+        "largestcity",
+        "residence",
+        "spouse",
+        "predecessor",
+        "state",
+        "party",
+        "children",
+        "parents",
+        "education",
+        "almaMater",
+        "president",
+        "leaderName",
+        "largestCity",
+        "officialLanguages",
+        "leaderTitle",
+        "capital",
+        "governmentType",
+        "influences",
+        "influenced"
+      ],
+      "person": [
+        "leaderName",
+        "leaderTitle",
+        "type",
+        "largestCity",
+        "governmentType",
+        "officialLanguages",
+        "capital",
+        "network",
+        "firstAired",
+        "channel",
+        "headquarters",
+        "sisterNames",
+        "broadcastArea",
+        "country",
+        "director",
+        "creator"
+      ]
+    }
+  }
+}
