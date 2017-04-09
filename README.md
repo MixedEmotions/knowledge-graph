@@ -2,11 +2,11 @@
 
 ## Description
 
-Creates knowledge graph from information processed by "Entity Extraction and Linking" module, and "Emotion Recognition from Text" module
+Creates Knowledge Graph from information processed by "Entity Extraction and Linking" module, and "Emotion Recognition from Text" module
 
-This MixedEmotions Orchestratoknowledge-graph was developed by NUIG.
+This MixedEmotions Knowledge Graph was developed by NUIG.
 
-The code of this orchestrator will let users have an starting point on how to interact with the MixedEmotion Toolbox modules. It is written in scala and can interact with RESTservices and DockerServices deployed in Mesos with a Mesos-DNS as a discovery service. The orchestrator will execute input documents in a pipeline with the defined modules.
+Knowledge Graph provides insight into relations between recognised entities using semantic knowledge from DBpedia. KG module uses entities that are recognised by Entity Extraction and Linking module, and extracts relations between the entities from DBpedia. Once the relations are extracted and filtered, they are stored in Elasticsearch database, where using Kibi they are visualized.
 
 ## REQUIREMENTS
 
@@ -18,11 +18,8 @@ Flask
 DBpedia dumps from http://wiki.dbpedia.org/downloads-2016-04
 
 Minimal list of required files:
-
 infobox_properties_en.ttl
-
 instance_types_en.ttl
-
 persondata_en.ttl
 
 
@@ -31,8 +28,8 @@ persondata_en.ttl
 
 Type  http://0.0.0.0:5000/
 
-| Description        | API call           |
-| ------------- |:-------------:| -----:|
+| Description | API call |
+| ------------- |:-------------:|
 | Check default configuration | GET	 /configuration |
 | Modify the configuration | POST	 /configuration |
 | Reset back to default configuration | GET	 /reset | 
