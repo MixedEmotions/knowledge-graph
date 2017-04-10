@@ -24,9 +24,9 @@ Minimal list of required files:
 * persondata_en.ttl
 
 
-Elasticsearch
+Elasticsearch: 2.4.1
 
-Kibi
+Kibi: kibi-enterprise-standard-4.6.3-2
 
 
 
