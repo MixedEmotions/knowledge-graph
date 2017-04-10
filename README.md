@@ -51,7 +51,16 @@ Type  http://localhost:5000/
 
 Kibi already has to contain  the source index pattern. In our example **trump_tweets**.
 
-trump_tweets: index on elasticsearch that contains data processed by ["Entity Extraction and Linking"](https://github.com/MixedEmotions/entity-linking), ["Emotion Recognition from Text"] module, and has a field ***text*** (that contains original text which was processed). 
+trump_tweets: index on elasticsearch that contains data processed by [*Entity Extraction and Linking*](https://github.com/MixedEmotions/entity-linking), [*Emotion Recognition from Text*] module, and has a field *text* (that contains original text which was processed).
+
+From  *Entity Extraction and Linking* we use fields: 
+* entity_linking.URI
+* entity_linking.EntityType
+
+From  *Emotion Recognition from Text* we use fields: 
+* emotions.emotion
+
+
 
 ### Submit credentials
 
@@ -72,7 +81,6 @@ http://localhost:5000/configuration PUT
 
 }
 ```
-
 
 ### Start Creation of graph
 
