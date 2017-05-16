@@ -13,7 +13,18 @@ import copy
 from flask import Flask, request, jsonify,make_response
 from threading import Thread
 
-def getDatasets( typeName='trump_review',indexName='reviews', elasticPort=9220, elasticHost="localhost"):
+def getSourceMapping(typeName='text_review',indexName='trump_tweets', elasticPort=9220, elasticHost="localhost"):
+    es = Elasticsearch([{'host': elasticHost, 'port': elasticPort}])
+    mapping = es.indices.get_mapping(index=indexName,doc_type=typeName)
+    return mapping[indexName]["mappings"][typeName] 
+
+def setMapping(mapping,typeName='text_review',indexName='tweets', elasticPort=9220, elasticHost="localhost"):
+    es = Elasticsearch([{'host': elasticHost, 'port': elasticPort}])
+    result = es.indices.create(index=indexName, ignore=400, body={})
+    result = es.indices.put_mapping(index=indexName, doc_type=typeName, body=mapping)
+    return result 
+
+def getDatasets( typeName='text_review',indexName='trump_tweets', elasticPort=9220, elasticHost="localhost"):
 	es = Elasticsearch([{'host': elasticHost, 'port': elasticPort}], http_auth=(elasticUsername, elasticPassword))
 	results=[]
 	global loging
@@ -48,6 +59,73 @@ def getDatasets( typeName='trump_review',indexName='reviews', elasticPort=9220, 
 	#	print(page["hits"]["hits"])
 		results.extend([(dataset["fields"]["entity_linking.EntityType"][0],dataset["fields"]["entity_linking.URI"][0].replace("dbpedia.org/page","dbpedia.org/resource")) for dataset in page["hits"]["hits"] if "fields" in dataset])
 	return set(results)
+
+def cloneTweets(indexName, typeName="text_review", elasticPort=9220, elasticHost="localhost"):
+	# delete old tweet index index 
+	deleteIndex( ["tweets"], elasticPort=elasticPort, elasticHost=elasticHost)
+	loging.append("deleted index "+"tweets")
+	loging.append("filtering tweets  to index "+"tweets")
+	mapping=getSourceMapping(typeName=typeName, indexName=indexName, elasticPort=elasticPort, elasticHost=elasticHost)
+	setMapping(mapping,typeName='text_review',indexName='tweets', elasticPort=elasticPort, elasticHost=elasticHost)
+	es = Elasticsearch([{'host': elasticHost, 'port': elasticPort}])
+	temRecordES=[]
+	
+	# search for tweets that are NOT retweets
+	esSearchResult = es.search(
+				index=indexName,
+				search_type='scan',
+				doc_type=typeName,
+				scroll = '2m',
+				size=1000,
+				request_timeout=1060,
+				body={'query': {
+					'filtered': {
+					  "filter" : {
+							"missing" : { "field" : "retweeted_status.text" }
+						 }
+					}
+				  }
+                }
+            )
+	sid = esSearchResult['_scroll_id']
+	scroll_size = esSearchResult['hits']['total']
+  
+  # Start scrolling
+	while (scroll_size > 0):
+		page = es.scroll(scroll_id = sid, scroll = '2m')
+		# Update the scroll ID
+		sid = page['_scroll_id']
+		# Get the number of results that we returned in the last scroll
+		scroll_size = len(page['hits']['hits'])
+#        print "scroll size: " + str(scroll_size)
+		# Do something with the obtained page
+		#print(page.get('hits').get('hits'))
+		for terms in page.get('hits').get('hits'):
+			tmp = terms.get('_source')
+		 #   del tmp['raw']
+			#print (terms)
+			if tmp:
+				temRecordES.append(tmp)
+			if len(temRecordES) > 10000:
+				write2EStweets(temRecordES, elasticPort=elasticPort, elasticHost=elasticHost)
+				temRecordES=[]
+	write2EStweets(temRecordES, elasticPort=elasticPort, elasticHost=elasticHost)
+	loging.append("Finished filtering tweets to index "+"tweets")
+
+def write2EStweets(AllData, indexName="tweets", typeName="text_review",elasticPort=9220, elasticHost="localhost"): 
+	es = Elasticsearch([{'host': elasticHost, 'port': elasticPort}])
+	messages = []
+	#print(AllData)
+	for record in AllData:
+		#print(record)
+		tmpMap = {"_op_type": "index", "_index": indexName, "_type": typeName}
+		tmpMap.update(record)
+		messages.append(tmpMap)
+	#print (len(messages))
+	result = bulk(es, messages)
+	return result
+
+
 
 def preSetES(indexName, typeName , elasticPort=9220, elasticHost="localhost"):
 		logging.info('Running preset for ', indexName)
@@ -209,7 +287,7 @@ def createVisualizations(nameList, elasticPort=9220, elasticHost="localhost"):
 		#create graph visualisation 
 		tmpMap ={  "_index": ".kibi", "_type": "visualization", "_id": "Graph", "_score": 1}
 		tmpMap.update( {
-		  "visState": "{\"title\":\"Graph\",\"type\":\"kibi_graph_browser\",\"params\":{\"vertices\":[{\"indexPattern\":\"person_unique\",\"indexPatternType\":\"person_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-user\",\"sourceField\":\"label\"},{\"indexPattern\":\"organization_unique\",\"indexPatternType\":\"organization_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-university\",\"sourceField\":\"label\"},{\"indexPattern\":\"location_unique\",\"indexPatternType\":\"location_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-map-marker\",\"sourceField\":\"label\"},{\"indexPattern\":\"trump_tweets\",\"indexPatternType\":\"text_review\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-comment-o\",\"sourceField\":\"emotions.emotion\"}],\"queryOption\":{\"queryId\":\"Kibi-Graph-Query\",\"datasourceId\":\"Kibi-Gremlin-Server\"},\"contextualScripts\":[],\"onUpdateScripts\":[],\"expansionScript\":\"Default-Expansion-Policy\",\"addTooltip\":false},\"aggs\":[],\"listeners\":{},\"version\":2}",
+		  "visState": "{\"title\":\"Graph\",\"type\":\"kibi_graph_browser\",\"params\":{\"vertices\":[{\"indexPattern\":\"person_unique\",\"indexPatternType\":\"person_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-user\",\"sourceField\":\"label\"},{\"indexPattern\":\"organization_unique\",\"indexPatternType\":\"organization_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-university\",\"sourceField\":\"label\"},{\"indexPattern\":\"location_unique\",\"indexPatternType\":\"location_type\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-map-marker\",\"sourceField\":\"label\"},{\"indexPattern\":\"tweets\",\"indexPatternType\":\"text_review\",\"iconType\":\"fontawesome\",\"labelType\":\"docField\",\"fwicon\":\"fa-comment-o\",\"sourceField\":\"emotions.emotion\"}],\"queryOption\":{\"queryId\":\"Kibi-Graph-Query\",\"datasourceId\":\"Kibi-Gremlin-Server\"},\"contextualScripts\":[],\"onUpdateScripts\":[],\"expansionScript\":\"Default-Expansion-Policy\",\"addTooltip\":false},\"aggs\":[],\"listeners\":{},\"version\":2}",
 		  "uiStateJSON": "{}",
 		  "description": "",
 		  "title": "Graph",
@@ -461,7 +539,8 @@ def addDefaultIndexes(indexName=".kibi", typeName="config" , elasticPort=9220, e
 		  "title": "organization",
 		   "paths": "{\"entity_linking.URI\":[\"entity_linking\",\"URI\"],\"entity_linking.connection\":[\"entity_linking\",\"connection\"],\"entity_linking.target\":[\"entity_linking\",\"target\"],\"label\":[\"label\"]}",
 		  "fields": "[{\"name\":\"_index\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"entity_linking.target\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":true,\"analyzed\":false,\"doc_values\":true},{\"name\":\"entity_linking.connection\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":true,\"analyzed\":false,\"doc_values\":true},{\"name\":\"entity_linking.URI\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":true,\"analyzed\":false,\"doc_values\":true},{\"name\":\"label\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":true,\"analyzed\":false,\"doc_values\":true},{\"name\":\"_source\",\"type\":\"_source\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_id\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_type\",\"type\":\"string\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false},{\"name\":\"_score\",\"type\":\"number\",\"count\":0,\"scripted\":false,\"indexed\":false,\"analyzed\":false,\"doc_values\":false}]"
-		 }]
+		 }
+		 ]
 
 		result = bulk(es, messages)
 		return result
@@ -602,12 +681,17 @@ def create():
 	
 	startTime = datetime.now()
 	try:
+		cloneTweets(typeName=inputIndexType,indexName=inputIndexName, elasticPort=elasticPort, elasticHost=elasticHost)
+	except:
+		loging.append("error: problem cloning tweets from index"+inputIndexName+" docType: "+inputIndexType)
+		return make_response(jsonify({"error":"problem cloning tweets from "}),500)
+	try:
 		deleteIndex( indexList, elasticPort=elasticPort, elasticHost=elasticHost)
 	except:
 		loging.append("error: problems deleting index")
 		return make_response(jsonify({"error":"problems deleting index"}),500)
 	try:
-		entities = getDatasets(typeName=inputIndexType,indexName=inputIndexName, elasticPort=elasticPort, elasticHost=elasticHost)
+		entities = getDatasets(indexName="tweets", typeName="text_review", elasticPort=elasticPort, elasticHost=elasticHost) 
 		if not entities:
 			return make_response(jsonify({"error":"no results from index: "+inputIndexName+" docType: "+inputIndexType+"elasticHost: "+elasticHost+" elasticPort: "+elasticPort}),500)
 		loging.append("got entities")
@@ -628,7 +712,7 @@ def create():
 	except:
 		loging.append("error: adding default indexes")
 		return make_response(jsonify({"error":"adding default indexes"}),500)
-	fullIndex =indexList+[inputIndexName]
+	fullIndex =indexList+["tweet"]#inputIndexName
 	#
 	for index in fullIndex+["location", "organization", "person"]:
 		try:
@@ -721,4 +805,4 @@ def start():
 	return jsonify({"output":"check status on /status"})
 
 if __name__ == "__main__":
-	app.run( debug=False, port=5000, host="0.0.0.0",threaded = True)
+	app.run( debug=False, port=8012, host="140.203.155.226",threaded = True)
